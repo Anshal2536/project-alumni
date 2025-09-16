@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlumniConnect - Centralized Alumni Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        :root {
+            --primary: #3a4fcc;
+            --secondary: #6c63ff;
+            --accent: #4cc9f0;
+            --dark: #2a2a3c;
+            --light: #f8f9fa;
+            --success: #28a745;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* 3D Background Canvas */
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 5%;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo span {
+            color: var(--secondary);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            background: transparent;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--primary);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            position: relative;
+        }
+        
+        .hero-content {
+            max-width: 600px;
+            z-index: 10;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        /* 3D Alumni Network Visualization */
+        .network-visualization {
+            position: absolute;
+            right: 5%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50%;
+            height: 70%;
+            perspective: 1000px;
+        }
+        
+        .floating-node {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary);
+            opacity: 0.7;
+            transform-style: preserve-3d;
+            animation: float 6s infinite ease-in-out;
+        }
+        
+        .floating-node:nth-child(2n) {
+            background: var(--primary);
+            animation-delay: -2s;
+        }
+        
+        .floating-node:nth-child(3n) {
+            background: var(--accent);
+            animation-delay: -4s;
+        }
+        
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+            transform-origin: 0 0;
+            z-index: -1;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate3d(0, 0, 0) rotate(0deg);
+            }
+            50% {
+                transform: translate3d(0, -20px, 0) rotate(5deg);
+            }
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 8rem 5%;
+            background-color: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+        
+        .section-title p {
+            color: #777;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px) rotateX(5deg);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .feature-card p {
+            color: #777;
+            line-height: 1.6;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .network-visualization {
+                display: none;
+            }
+            
+            .hero-content {
+                max-width: 100%;
+                text-align: center;
+            }
+            
+            .hero-buttons {
+                justify-content: center;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Background Canvas -->
+    <div id="three-canvas"></div>
+    
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">Alumni<span>Connect</span></div>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Events</a>
+            <a href="#">Mentorship</a>
+            <a href="#">Donate</a>
+        </div>
+        <div class="auth-buttons">
+            <button class="btn btn-outline">Login</button>
+            <button class="btn btn-primary">Sign Up</button>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Connect. Engage. Grow Together.</h1>
+            <p>AlumniConnect is a centralized platform for alumni data management and engagement, helping institutions maintain lasting relationships with their graduates.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary">Explore Features</button>
+                <button class="btn btn-outline">Watch Demo</button>
+            </div>
+        </div>
+        
+        <!-- 3D Alumni Network Visualization -->
+        <div class="network-visualization" id="network-viz">
+            <!-- 3D nodes and connections will be generated by JS -->
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="features">
+        <div class="section-title">
+            <h2>Powerful Features</h2>
+            <p>Our platform offers everything you need to manage and engage your alumni community effectively</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>Centralized Database</h3>
+                <p>Maintain a secure, up-to-date database of all alumni with detailed profiles including career information and contact details.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <h3>Event Management</h3>
+                <p>Create, promote, and manage alumni events with easy registration and attendance tracking.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🤝</div>
+                <h3>Mentorship Program</h3>
+                <p>Connect experienced alumni with current students for mentorship opportunities and career guidance.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Networking Platform</h3>
+                <p>Facilitate connections between alumni based on industry, location, interests, and more.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics Dashboard</h3>
+                <p>Track engagement metrics, donation patterns, and network growth with comprehensive analytics.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💝</div>
+                <h3>Fundraising Tools</h3>
+                <p>Streamline donation processes and campaign management with integrated payment solutions.</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Simple 3D network visualization
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('network-viz');
+            const nodeCount = 30;
+            
+            // Create floating nodes
+            for (let i = 0; i < nodeCount; i++) {
+                const node = document.createElement('div');
+                node.className = 'floating-node';
+                
+                // Random position within container
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const z = Math.random() * 50;
+                
+                node.style.left = `${x}%`;
+                node.style.top = `${y}%`;
+                node.style.width = `${10 + Math.random() * 15}px`;
+                node.style.height = node.style.width;
+                node.style.animationDelay = `${-Math.random() * 6}s`;
+                
+                container.appendChild(node);
+                
+                // Create connections between some nodes
+                if (i > 0 && Math.random() > 0.7) {
+                    const prevNode = container.children[Math.floor(Math.random() * i)];
+                    const line = document.createElement('div');
+                    line.className = 'connection-line';
+                    
+                    const x1 = x;
+                    const y1 = y;
+                    const x2 = parseFloat(prevNode.style.left);
+                    const y2 = parseFloat(prevNode.style.top);
+                    
+                    const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                    
+                    line.style.width = `${length}%`;
+                    line.style.left = `${x1}%`;
+                    line.style.top = `${y1}%`;
+                    line.style.transform = `rotate(${angle}deg)`;
+                    line.style.opacity = 0.1 + Math.random() * 0.2;
+                    
+                    container.appendChild(line);
+                }
+            }
+            
+            // Three.js background effect
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('three-canvas').appendChild(renderer.domElement);
+            
+            // Add particles
+            const particlesGeometry = new THREE.BufferGeometry;
+            const particlesCount = 500;
+            const posArray = new Float32Array(particlesCount * 3);
+            
+            for (let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 10;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.02,
+                color: 0x6c63ff
+            });
+            
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 2;
+            
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                particlesMesh.rotation.x += 0.0005;
+                particlesMesh.rotation.y += 0.0005;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        });
+    </script>
+</body>
+</html>
